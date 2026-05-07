@@ -1,38 +1,67 @@
 # Email AI Assistant
 
-A Chrome Extension + FastAPI backend that generates **context-aware email replies inside Gmail** using an Ollama-based LLM.
+A Chrome Extension + FastAPI backend that generates **context-aware email replies directly inside Gmail** using an Ollama-based LLM.
 
 ---
 
 ## 🚀 Current Status
 
-This project has moved beyond a simple MVP and now focuses on **useful, context-aware replies** rather than just generic AI output.
+This project is now at a stage where it is **actually usable in a real email workflow**.
 
-### ✅ Implemented functionality
+You can:
 
-- ✅ Inject "AI Reply" button directly into Gmail UI
-- ✅ Extract visible email content from Gmail
-- ✅ Send email text to FastAPI backend
-- ✅ Generate reply using Ollama (cloud model)
-- ✅ Display AI-generated reply (currently via alert)
-- ✅ Context-aware prompting (default + optional context)
-- ✅ Anti-hallucination rules in prompt
+- Open an email in Gmail
+- Click **"✨ AI Reply"**
+- Instantly get a suggested reply inserted into the compose box
+- Edit if needed and send
 
 ---
 
-## 🎯 Core Idea
+## 🎯 What problem does this solve?
 
-Generic AI replies are **not useful**.
+Most AI-generated email replies are:
 
-This project focuses on:
+- Too generic
+- Factually incorrect
+- Not tailored to your situation
 
-> Generating **correct and context-aware email replies**, not just “nice-sounding” ones.
+This tool focuses on:
+
+> ✅ Generating **correct, context-aware replies**  
+> ✅ Reducing the effort of writing everyday emails  
+> ✅ Acting as a **drafting assistant**, not an auto-sender
+
+---
+
+## 🧪 What it feels like to use
+
+Typical usage looks like this:
+
+1. Open an email in Gmail
+2. Click **✨ AI Reply**
+3. Gmail opens the reply editor automatically
+4. A suggested reply is inserted
+5. You tweak (if needed) and send
+
+👉 In many cases, only minimal edits are needed.
+
+---
+
+## ✅ Implemented functionality
+
+- ✅ Inject "✨ AI Reply" button into Gmail UI
+- ✅ One-click → opens reply editor + inserts suggestion
+- ✅ Extract email content directly from Gmail
+- ✅ Send email to FastAPI backend
+- ✅ Generate reply using Ollama (cloud model)
+- ✅ Context-aware prompting (default + optional context)
+- ✅ Anti-hallucination rules (prevents wrong answers)
 
 ---
 
 ## 🧠 Key Feature: Context-Aware Replies
 
-The backend uses **structured prompting with context injection**.
+The system uses **structured prompting with context** to avoid incorrect answers.
 
 ### Prompt structure
 
@@ -40,27 +69,25 @@ The backend uses **structured prompting with context injection**.
 
 SYSTEM:
 
-- Rules for behavior (anti-hallucination)
-- Tone and style instructions
+*   Rules (no hallucinations, correct answers only)
 
 CONTEXT:
 
-- Default context (always applied)
-- Optional extra context (dynamic)
+*   Default context (about you / your organization)
+*   Optional extra context
 
 EMAIL:
 
-- Raw email text from Gmail
+*   Raw email content
 
-→ OUTPUT: Suggested reply
+→ OUTPUT:
+Suggested reply
 
 ```
 
 ---
 
-## 🧩 Default Context
-
-The system includes a **baseline context** describing the user:
+## 🧩 Default Context (example)
 
 ```text
 Du svarer som Jonas.
@@ -75,11 +102,15 @@ Personlig kommunikation:
 - Hvis det er en privat invitation, er du normalt positiv og imødekommende.
 ```
 
-### ✅ Purpose
+### ✅ Why this matters
 
-- Prevent hallucinations
-- Ensure factual correctness
-- Provide consistent tone
+Without context:
+
+- ❌ AI guesses → wrong answers
+
+With context:
+
+- ✅ AI respects real-world constraints
 
 ---
 
@@ -87,9 +118,26 @@ Personlig kommunikation:
 
     Chrome Extension (content.js)
             ↓
-    FastAPI Backend
+    FastAPI backend
             ↓
-    Ollama Model (gpt-oss:120b-cloud)
+    Ollama (gpt-oss:120b-cloud)
+
+---
+
+## 🌐 Chrome Extension
+
+### Features
+
+- Injects a native-feeling **AI Reply button**
+- Works directly inside Gmail UI
+- Automatically finds the reply compose field
+- Inserts reply into editor
+
+### UI Behavior
+
+- Button appears next to Gmail’s Reply/Forward actions
+- Styled to feel native (but slightly highlighted)
+- One-click workflow — no extra UI steps
 
 ---
 
@@ -99,13 +147,13 @@ Personlig kommunikation:
 
 - FastAPI
 - Python
-- Ollama (local API for cloud model)
+- Ollama
 
 ---
 
 ### Endpoint
 
-#### `POST /generate-reply`
+#### POST `/generate-reply`
 
 ##### Request
 
@@ -126,61 +174,7 @@ Personlig kommunikation:
 
 ---
 
-### Prompt Design
-
-The backend enforces strict rules:
-
-- Only use information from:
-  - the email
-  - the provided context
-- Never invent services or facts
-- If unsure → explicitly say so
-- Prefer clear and direct answers (especially for yes/no questions)
-
----
-
-### Example Behavior
-
-#### ✅ Correct behavior
-
-Email:
-
-> "Afholder I sommerlejr?"
-
-Reply:
-
-> "Nej, vi afholder desværre ikke sommerlejr."
-
-#### ❌ Prevented behavior
-
-- Inventing services
-- Suggesting activities that do not exist
-- Overly creative or speculative replies
-
----
-
-## 🌐 Chrome Extension
-
-### Features
-
-- Injects **"✨ AI Reply"** button into Gmail UI
-- Styled to feel like a **native Gmail action**
-- Extracts email text via DOM (`.a3s`)
-- Sends request to backend
-- Displays response (current: `alert()`)
-
----
-
-### UI Notes
-
-- Button blends with Gmail layout but stands out via:
-  - light blue background
-  - subtle hover effect
-- Designed as a **natural extension of Gmail**, not a separate tool
-
----
-
-## ⚙️ Running the Project
+## ⚙️ Running the project
 
 ### 1. Start backend
 
@@ -200,39 +194,63 @@ uvicorn main:app --reload --port 8003
 
 ---
 
-## ✅ Known Limitations
+## ✅ What works well (current strengths)
 
-- Reply is shown via `alert()` (not yet inserted into Gmail editor)
-- Email extraction is basic (`.a3s`) and may break on complex threads
-- No structured parsing (signatures, quoted text, etc.)
-- Context is currently **static (hardcoded DEFAULT_CONTEXT)**
-- No user-configurable preferences yet
+- ✅ Replies are factually correct (no hallucinated services)
+
+- ✅ Handles both formal and informal emails
+
+- ✅ Works well for:
+  - questions about services
+  - invitations
+  - short practical emails
+
+- ✅ Feels integrated into Gmail workflow
 
 ---
 
-## 🧭 Next Steps (Planned)
+## ⚠️ Known limitations
 
-### 🔥 High priority
+- Replies may still be:
+  - too long
+  - slightly too formal
+  - needing minor edits
 
-- Insert reply directly into Gmail compose box
-- Replace `alert()` with inline UI panel
+- Email parsing is basic (`.a3s`)
+
+- No advanced handling of email threads or signatures
+
+- Context is still static (hardcoded)
+
+- No "regenerate" or "edit suggestion" UI yet
+
+---
+
+## 🧭 How the project improves over time
+
+The system is designed to improve through real usage:
+
+1.  Use it on real emails
+2.  Collect feedback (FEEDBACK.md)
+3.  Identify patterns
+4.  Tune prompt
+
+---
+
+## 🧭 Next Steps
+
+### 🔥 UX improvements
+
+- Inline suggestion panel (instead of auto-insert)
+- “Regenerate reply” button
 
 ---
 
 ### 🧠 Intelligence improvements
 
-- Dynamic context (from frontend → backend)
-- Basic topic detection (e.g. "sommercamp", "kursus")
-- User-configurable context/preferences
-
----
-
-### 🔍 Future direction
-
-- RAG (retrieve knowledge from docs/website)
-- Email summarization
-- Task extraction ("remember to reply", etc.)
-- Follow-up suggestions
+- Dynamic context (based on email topic)
+- Shorter, more direct responses by default
+- Better tone control
 
 ---
 
@@ -240,27 +258,27 @@ uvicorn main:app --reload --port 8003
 
 To build a **small, practical AI assistant** that:
 
-- integrates directly into real workflows (Gmail)
-- provides **correct, context-aware suggestions**
-- avoids unnecessary complexity
-- improves everyday productivity
+- Works inside real workflows (Gmail)
+- Produces **useful, correct replies**
+- Requires **minimal setup and minimal thinking**
+- Can be improved iteratively over time
 
 ---
 
 ## 💡 Design Principles
 
+- Correctness > cleverness
 - Minimal > complex
-- Correctness > creativity
 - Context > generic AI
-- Iterative development
+- Build → test → improve
 
 ---
 
 ## 📌 Notes
 
-- Replies are primarily in Danish
-- System is tuned for realistic personal usage
-- This is an exploration of **practical AI tooling**, not a generic chatbot
+- Designed primarily for Danish emails
+- Built for personal, real-world usage
+- Not intended as a "send automatically" system
 
 ---
 

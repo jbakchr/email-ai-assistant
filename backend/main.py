@@ -18,5 +18,10 @@ app.add_middleware(
 
 @app.post("/generate-reply", response_model=EmailResponse)
 def generate_email_reply(request: EmailRequest):
-    reply = generate_reply(request.email_text)
+    
+    reply = generate_reply(
+        email_text=request.email_text,
+        context=request.context
+    )
+
     return EmailResponse(reply=reply)

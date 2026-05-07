@@ -1,4 +1,4 @@
-## Feedback
+# Feedback
 
 This file collects real examples of AI-generated replies.
 
@@ -18,6 +18,39 @@ For each example, quickly note:
 - 💡 What should be improved
 
 Keep it short — no overthinking.
+
+---
+
+## 📝 New Example Template
+
+### Example — [Short description]
+
+**Email:**
+(Paste or summarize the incoming email)
+
+**AI Reply:**
+(Paste the generated reply)
+
+---
+
+**✅ What worked:**
+
+- **❌ What didn’t work:**
+
+- **💡 Suggested improvement:**
+
+- ***
+
+  **Quick verdict (choose one):**
+
+- ✅ Ready to send (no edits)
+- ✏️ Needs small tweaks
+- ❌ Not usable
+
+---
+
+**Notes (optional):**
+(Anything extra you notice — tone, length, weird phrasing, etc.)
 
 ---
 
@@ -149,3 +182,79 @@ As you collect examples, look for patterns like:
 ## 🧠 Guiding principle
 
 Correctness > tone > polish
+
+---
+
+## 🔧 Prompt Tuning Process
+
+This section describes how feedback is turned into improvements.
+
+---
+
+### ✅ When to tune
+
+Do NOT change the prompt for every example.
+
+Instead:
+
+- Wait until at least 3–5 examples show the same issue
+- Identify a pattern (e.g. "too long", "too formal")
+
+---
+
+### 🔍 Step 1 — Identify pattern
+
+Example patterns:
+
+- Replies are too long
+- Tone is too formal
+- Repeats information
+- Makes weak or vague statements
+- Slightly incorrect phrasing ("i år", "måske", etc.)
+
+---
+
+### 🧠 Step 2 — Define improvement rule
+
+Convert feedback into a clear rule:
+
+Examples:
+
+- ❌ "Too long"
+  → ✅ "Hold svar korte og direkte"
+
+- ❌ "Too formal"
+  → ✅ "Brug en naturlig og uformel tone"
+
+- ❌ "Repeats itself"
+  → ✅ "Undgå gentagelser"
+
+---
+
+### 🛠 Step 3 — Update prompt
+
+Add rule to prompt in `ollama_client.py`.
+
+Example:
+
+```text
+- Hold svar korte og præcise
+- Undgå unødvendige introduktioner
+```
+
+### 🧪 Step 4 — Validate
+
+After updating prompt:
+
+Test on 2–3 real emails
+Check if the issue improved
+
+### ⚠️ Important rules
+
+Change ONE thing at a time
+Avoid overcorrecting
+Always prioritize correctness over tone
+
+### 🎯 Goal
+
+Small prompt changes → noticeable improvement in reply quality

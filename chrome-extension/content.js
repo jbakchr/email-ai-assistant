@@ -44,22 +44,16 @@ function injectButton() {
 }
 
 function findReplyContainer() {
-  // Look for all clickable Gmail buttons
   const buttons = Array.from(document.querySelectorAll('span[role="link"]'));
 
   const replyButton = buttons.find((el) => {
     const text = el.innerText.toLowerCase();
-
-    // Support both English AND Danish
     return text.includes("reply") || text.includes("svar");
   });
 
   if (!replyButton) return null;
 
-  // key fix: find correct container
-  const container = replyButton.closest(".amn");
-
-  return container;
+  return replyButton.closest(".amn");
 }
 
 function getEmailText() {
@@ -89,24 +83,132 @@ async function fetchAIReply(emailText) {
   }
 }
 
+/* ---------------------------
+   NEW helper functions
+---------------------------- */
+
+function findReplyActionInContainer(container) {
+  if (!container) return null;
+
+  const actions = Array.from(container.querySelectorAll('span[role="link"]'));
+  return actions.find((el) => {
+    const t = el.innerText.toLowerCase().trim();
+    return t.includes("reply") || t.includes("svar");
+  });
+}
+
+function clickElement(el) {
+  if (!el) return;
+
+  // Some Gmail UI reacts better to real mouse events than el.click() alone
+  el.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+  el.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+  el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+}
+
+function getActiveComposeBox() {
+  // Gmail compose editor is a contenteditable textbox
+  const boxes = Array.from(
+    document.querySelectorAll('div[contenteditable="true"][role="textbox"]'),
+  );
+
+  // Return the last visible one (best guess for "active")
+  for (let i = boxes.length - 1; i >= 0; i--) {
+    const el = boxes[i];
+    if (el && el.offsetParent !== null) return el;
+  }
+
+  return null;
+}
+
+function waitForComposeBox(timeoutMs = 5000, intervalMs = 100) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+
+    const timer = setInterval(() => {
+      const box = getActiveComposeBox();
+      if (box) {
+        clearInterval(timer);
+        resolve(box);
+        return;
+      }
+
+      if (Date.now() - start > timeoutMs) {
+        clearInterval(timer);
+        resolve(null);
+      }
+    }, intervalMs);
+  });
+}
+
+function moveCaretToEnd(el) {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function insertIntoCompose(text, composeBox) {
+  const box = composeBox || getActiveComposeBox();
+  if (!box) return false;
+
+  const existing = box.innerText.trim();
+
+  // If there's already a draft, prepend AI reply above it (simple, safe default)
+  if (existing.length > 0) {
+    box.innerText = text + "\n\n" + existing;
+  } else {
+    box.innerText = text;
+  }
+
+  // Trigger Gmail to notice changes
+  box.dispatchEvent(new Event("input", { bubbles: true }));
+
+  box.focus();
+  moveCaretToEnd(box);
+
+  return true;
+}
+
+/* ---------------------------
+   Updated click handler
+---------------------------- */
+
 async function handleClick(event) {
-  const button = event.target;
+  const button = event.currentTarget;
 
   const emailText = getEmailText();
-
   if (!emailText) {
     alert("Kunne ikke finde email indhold.");
     return;
   }
 
-  // ✅ Small UX improvement
   button.innerText = "Genererer...";
 
+  // 1) Ensure reply editor is open. If not, click Gmail's Reply/Svar.
+  let composeBox = getActiveComposeBox();
+  if (!composeBox) {
+    const container = button.closest(".amn");
+    const replyAction = findReplyActionInContainer(container);
+    if (replyAction) {
+      clickElement(replyAction);
+    }
+    composeBox = await waitForComposeBox();
+  }
+
+  // 2) Generate AI reply
   const reply = await fetchAIReply(emailText);
 
-  button.innerText = "AI Reply";
+  // 3) Insert into compose if possible; otherwise fallback to alert
+  const inserted = insertIntoCompose(reply, composeBox);
+  if (!inserted) {
+    alert("AI forslag:\n\n" + reply);
+  }
 
-  alert("AI forslag:\n\n" + reply);
+  button.innerText = "✨ AI Reply";
 }
 
 setInterval(injectButton, 2000);
